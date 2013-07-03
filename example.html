@@ -1,20 +1,40 @@
 <!doctype html>
 <title>Example</title>
-<script type="text/javascript" src="js/keybind.js"></script>
-<script type="text/javascript">
-    function addText(text) {
-        element = document.createElement('p');
-        element.innerHTML = text;
-        document.getElementsByTagName('body')[0].appendChild(element);
-    }
-
-    new Keybinding('a', function(count) { addText("Do action 'a' " + count + " times") });
-    new Keybinding('ad', function(count) { addText("Do action 'ad' " + count + " times") });
-    new Keybinding('ad', function(count) { addText("Do action 'ad' (2) " + count + " times") });
-    new Keybinding('as', function(count) { addText("Do action 'as' " + count + " times") });
-</script>
 <style type="text/css">
-    body { font:100% arial; margin:0; padding:3rem; }
+    body { font:100% arial; margin:0; padding:2rem; }
+    h1 { margin:1rem 0; padding:0; }
+    p { margin:1rem 0; padding:0; }
 </style>
 
-<p><strong>Registered keybindings: a, ad, ad, as</strong></p>
+<h1>Registered keybindings:</h1>
+<div id="keybindings"></div>
+
+<h1>Output:</h1>
+<div id="output"></div>
+
+<script type="text/javascript" src="js/keybind.js"></script>
+<script type="text/javascript">
+    var keybindings = document.getElementById('keybindings');
+    var output = document.getElementById('output');
+
+    function addText(text, parent) {
+        element = document.createElement('p');
+        element.innerHTML = text;
+        parent.appendChild(element);
+    }
+
+    function action(count, sequence, description) {
+        addText("Do action '" + description + "' (" + sequence + ") " + count + " times", output);
+    }
+
+    new Keybinding('a', action, 'Add nothing');
+    new Keybinding('ac', action, 'Add cat');
+    new Keybinding('ad', action, 'Add dog');
+    new Keybinding('ad', action, 'Add dog 2');
+
+    var registered = Keybinding.getRegistered();
+    for (var i = 0; i < registered.length; i ++) {
+        var shortcut = registered[i];
+        addText(shortcut.shortcut + ': ' + shortcut.description, keybindings);
+    }
+</script>
