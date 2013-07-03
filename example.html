@@ -2,7 +2,8 @@
 <title>Example</title>
 <script type="text/javascript" src="js/keybind.js"></script>
 <script type="text/javascript">
-    new Keybinding('a', function(count) { console.log('a:' + count) });
-    new Keybinding('ad', function(count) { console.log('ad: ' + count) });
-    new Keybinding('ad', function(count) { console.log('ad 2: ' + count) });
+    new Keybinding('a', function(count) { console.log("Do action 'a' " + count + " times") });
+    new Keybinding('ad', function(count) { console.log("Do action 'ad' " + count + " times") });
+    new Keybinding('ad', function(count) { console.log("Do action 'ad' (2) " + count + " times") });
+    new Keybinding('as', function(count) { console.log("Do action 'as' " + count + " times") });
 </script>
