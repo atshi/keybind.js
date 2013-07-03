@@ -1,6 +1,12 @@
 # Author: atshi.com
 
 class Keybinding
+    constructor: (shortcut, action) ->
+        KeybindingManager.init()
+        KeybindingManager.registerShortcut shortcut
+        KeybindingManager.registerAction shortcut, action
+
+class KeybindingManager
     @TIMEOUT = 300
 
     @shortcuts = []
@@ -14,11 +20,6 @@ class Keybinding
     @Keys =
         ZERO: '0'.charCodeAt(0)
         NINE: '9'.charCodeAt(0)
-
-    constructor: (shortcut, action) ->
-        Keybinding.init()
-        Keybinding.registerShortcut shortcut
-        Keybinding.registerAction shortcut, action
 
     @init: ->
         if !@initiated
