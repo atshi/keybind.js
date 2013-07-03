@@ -8,7 +8,12 @@ class Keybinding
     @initiated = false
     @sequence = ''
     @prevSequence = ''
+    @storedCount = ''
     @timeoutInterval = null
+
+    @Keys =
+        ZERO: '0'.charCodeAt(0)
+        NINE: '9'.charCodeAt(0)
 
     constructor: (shortcut, action) ->
         Keybinding.init()
@@ -32,12 +37,17 @@ class Keybinding
             clearTimeout @timeoutInterval
             @timeoutInterval = null
 
-        @prevSequence = @sequence
-        @sequence += char
-        if @sequenceHasChildren @sequence
-            @timeoutInterval = setTimeout @findSequenceAndExecute.bind(this), @TIMEOUT
+        charcode = char.charCodeAt(0)
+
+        if !@sequence and charcode >= @Keys.ZERO and charcode <= @Keys.NINE
+            @storedCount += char
         else
-            @findSequenceAndExecute()
+            @prevSequence = @sequence
+            @sequence += char
+            if @sequenceHasChildren @sequence
+                @timeoutInterval = setTimeout @findSequenceAndExecute.bind(this), @TIMEOUT
+            else
+                @findSequenceAndExecute()
 
     @findSequenceAndExecute: ->
         if @sequenceActionExists @sequence
@@ -49,6 +59,7 @@ class Keybinding
 
         @sequence = ''
         @prevSequence = ''
+        @storedCount = ''
 
         if @timeoutInterval?
             clearTimeout @timeoutInterval
@@ -59,8 +70,10 @@ class Keybinding
             @addToSequence charFromPrev
 
     @executeSequence: (sequence) ->
+        count = Math.max(1, parseInt(@storedCount))
+        if !count then count = 1
         for action in @actions[sequence]
-            action.call(window, [1])
+            action.call(window, [count])
 
     @sequenceActionExists: (sequence) ->
         @actions[sequence]? and @actions[sequence].length > 0
