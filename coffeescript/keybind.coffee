@@ -19,7 +19,7 @@ class Keybinding
 
     @getRegistered: ->
         registered = []
-        for own key, collection of KeybindingManager.actions
+        for own key, collection of KeybindingManager.keybindings
             for keybinding in collection
                 registered.push keybinding
         registered
@@ -28,7 +28,7 @@ class KeybindingManager
     @TIMEOUT = 300
 
     @shortcuts = []
-    @actions = []
+    @keybindings = []
     @initiated = false
     @sequence = ''
     @prevSequence = ''
@@ -91,11 +91,11 @@ class KeybindingManager
     @executeSequence: (sequence) ->
         count = Math.max(1, parseInt(@storedCount))
         if !count then count = 1
-        for keybinding in @actions[sequence]
+        for keybinding in @keybindings[sequence]
             keybinding.getAction().call(window, count, sequence, keybinding.getDescription())
 
     @sequenceActionExists: (sequence) ->
-        @actions[sequence]? and @actions[sequence].length > 0
+        @keybindings[sequence]? and @keybindings[sequence].length > 0
 
     @sequenceHasChildren: (sequence) ->
         array = @shortcuts
@@ -119,9 +119,9 @@ class KeybindingManager
             array = array[char]
 
     @register: (keybinding) ->
-        if !@actions[keybinding.getShortcut()]?
-            @actions[keybinding.getShortcut()] = []
-        @actions[keybinding.getShortcut()].push keybinding
+        if !@keybindings[keybinding.getShortcut()]?
+            @keybindings[keybinding.getShortcut()] = []
+        @keybindings[keybinding.getShortcut()].push keybinding
 
         # Register shortcut
         array = @shortcuts
@@ -134,15 +134,13 @@ class KeybindingManager
 
     @unregister: (keybinding) ->
         shortcut = keybinding.getShortcut()
-        index = @actions[shortcut].indexOf keybinding
-        @actions[shortcut].splice index, 1
+        index = @keybindings[shortcut].indexOf keybinding
+        @keybindings[shortcut].splice index, 1
 
         # Remove from shortcuts
         sequence = shortcut
-        while !@sequenceHasChildren(sequence) and sequence.length > 0 and (!@actions[sequence]? or @actions[sequence].length == 0)
+        while !@sequenceHasChildren(sequence) and sequence.length > 0 and (!@keybindings[sequence]? or @keybindings[sequence].length == 0)
             @removeLastInSequence sequence
             sequence = sequence.slice 0, -1
-
-        console.log @shortcuts
 
 window.Keybinding = Keybinding
