@@ -27,14 +27,14 @@
         addText("Do action '" + description + "' (" + sequence + ") " + count + " times", output);
     }
 
-    new Keybinding('a', action, 'Add nothing');
-    new Keybinding('ac', action, 'Add cat');
-    new Keybinding('ad', action, 'Add dog');
-    new Keybinding('ad', action, 'Add dog 2');
+    var k1 = new Keybinding('a', action, 'Add nothing');
+    var k2 = new Keybinding('ac', action, 'Add cat');
+    var k3 = new Keybinding('ad', action, 'Add dog');
+    var k4 = new Keybinding('ad', action, 'Add dog 2');
 
     var registered = Keybinding.getRegistered();
     for (var i = 0; i < registered.length; i ++) {
-        var shortcut = registered[i];
-        addText(shortcut.shortcut + ': ' + shortcut.description, keybindings);
+        var keybinding = registered[i];
+        addText(keybinding.getShortcut() + ': ' + keybinding.getDescription(), keybindings);
     }
 </script>

@@ -2,17 +2,24 @@
 
 class Keybinding
     constructor: (shortcut, action, description) ->
+        @getShortcut = ->
+            shortcut
+
+        @getDescription = ->
+            description
+
+        @getAction = ->
+            action
+
         KeybindingManager.init()
         KeybindingManager.registerShortcut shortcut
-        KeybindingManager.registerAction shortcut, action, description
+        KeybindingManager.registerAction @
 
     @getRegistered: ->
         registered = []
         for own key, collection of KeybindingManager.actions
-            for action in collection
-                registered.push
-                    shortcut: key
-                    description: action.description
+            for keybinding in collection
+                registered.push keybinding
         registered
 
 class KeybindingManager
@@ -82,8 +89,8 @@ class KeybindingManager
     @executeSequence: (sequence) ->
         count = Math.max(1, parseInt(@storedCount))
         if !count then count = 1
-        for action in @actions[sequence]
-            action.method.call(window, count, sequence, action.description)
+        for keybinding in @actions[sequence]
+            keybinding.getAction().call(window, count, sequence, keybinding.getDescription())
 
     @sequenceActionExists: (sequence) ->
         @actions[sequence]? and @actions[sequence].length > 0
@@ -107,11 +114,9 @@ class KeybindingManager
                 array[char] = []
             array = array[char]
 
-    @registerAction: (shortcut, method, description) ->
-        if !@actions[shortcut]?
-            @actions[shortcut] = []
-        @actions[shortcut].push
-            method: method
-            description: description
+    @registerAction: (keybinding) ->
+        if !@actions[keybinding.getShortcut()]?
+            @actions[keybinding.getShortcut()] = []
+        @actions[keybinding.getShortcut()].push keybinding
 
 window.Keybinding = Keybinding
