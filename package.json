@@ -1,0 +1,30 @@
+{
+  "name": "keybind",
+  "version": "0.1.0",
+  "description": "Keybind.js is a small librarry allowing you to create keybindings for use within any web application.",
+  "main": " ",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/atshi/keybind.js.git"
+  },
+  "keywords": [
+    "js",
+    "keybind",
+    "keybinding",
+    ""
+  ],
+  "author": "Atshi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/atshi/keybind.js/issues"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-coffee": "~0.7.0",
+    "grunt-contrib-uglify": "~0.2.2",
+    "clean-pattern": "~0.1.2"
+  }
+}
