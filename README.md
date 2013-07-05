@@ -4,7 +4,7 @@ Keybind.js
 The goal of this project is to provide a library for creating keybindings with any webapp.
 
 ### Compile with: ###
-    coffee --output js --compile coffeescript
+    grunt build
 
 ### Usage: ###
 This example listens to the shortcut a + d:
