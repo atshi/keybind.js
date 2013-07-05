@@ -31,6 +31,9 @@
     var k2 = new Keybinding('ac', action, 'Add cat');
     var k3 = new Keybinding('ad', action, 'Add dog');
     var k4 = new Keybinding('ad', action, 'Add dog 2');
+    var k5 = new Keybinding('ad', action, 'Add dog 3');
+
+    k5.remove();
 
     var registered = Keybinding.getRegistered();
     for (var i = 0; i < registered.length; i ++) {

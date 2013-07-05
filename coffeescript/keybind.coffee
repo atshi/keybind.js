@@ -12,8 +12,10 @@ class Keybinding
             action
 
         KeybindingManager.init()
-        KeybindingManager.registerShortcut shortcut
-        KeybindingManager.registerAction @
+        KeybindingManager.register @
+
+    remove: ->
+        KeybindingManager.unregister @
 
     @getRegistered: ->
         registered = []
@@ -106,17 +108,41 @@ class KeybindingManager
             return true
         return false
 
-    @registerShortcut: (shortcut) ->
+    @removeLastInSequence: (sequence) ->
         array = @shortcuts
+        for i in [0...sequence.length]
+            char = sequence.charAt(i)
+            if i == sequence.length-1
+                delete array[char]
+            if !array[char]?
+                return
+            array = array[char]
+
+    @register: (keybinding) ->
+        if !@actions[keybinding.getShortcut()]?
+            @actions[keybinding.getShortcut()] = []
+        @actions[keybinding.getShortcut()].push keybinding
+
+        # Register shortcut
+        array = @shortcuts
+        shortcut = keybinding.getShortcut()
         for i in [0...shortcut.length]
             char = shortcut.charAt(i)
             if !array[char]?
                 array[char] = []
             array = array[char]
 
-    @registerAction: (keybinding) ->
-        if !@actions[keybinding.getShortcut()]?
-            @actions[keybinding.getShortcut()] = []
-        @actions[keybinding.getShortcut()].push keybinding
+    @unregister: (keybinding) ->
+        shortcut = keybinding.getShortcut()
+        index = @actions[shortcut].indexOf keybinding
+        @actions[shortcut].splice index, 1
+
+        # Remove from shortcuts
+        sequence = shortcut
+        while !@sequenceHasChildren(sequence) and sequence.length > 0 and (!@actions[sequence]? or @actions[sequence].length == 0)
+            @removeLastInSequence sequence
+            sequence = sequence.slice 0, -1
+
+        console.log @shortcuts
 
 window.Keybinding = Keybinding
