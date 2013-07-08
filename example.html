@@ -27,17 +27,40 @@
         addText("Do action '" + description + "' (" + sequence + ") " + count + " times", output);
     }
 
+    function toggleMode(count) {
+        for (var i = 0; i < count; i ++) {
+            if (Keybinding.getMode() == 'Mode 1') {
+                Keybinding.setMode('Mode 2');
+                addText("Set mode: Mode 2", output);
+            }
+            else if (Keybinding.getMode() == 'Mode 2') {
+                Keybinding.setMode();
+                addText("Set mode: None", output);
+            }
+            else {
+                Keybinding.setMode('Mode 1');
+                addText("Set mode: Mode 1", output);
+            }
+        }
+    }
+
     var k1 = new Keybinding('a', action, 'Add nothing');
-    var k2 = new Keybinding('ac', action, 'Add cat');
+    var k2 = new Keybinding('ac', action, 'Add cat', 'Mode 1');
+    var k2 = new Keybinding('ac', action, 'Add category', 'Mode 2');
     var k3 = new Keybinding('ad', action, 'Add dog');
     var k4 = new Keybinding('ad', action, 'Add dog 2');
     var k5 = new Keybinding('ad', action, 'Add dog 3');
+
+    new Keybinding('m', toggleMode, 'Toggle mode (None, Mode 1, Mode 2)')
 
     k5.remove();
 
     var registered = Keybinding.getRegistered();
     for (var i = 0; i < registered.length; i ++) {
         var keybinding = registered[i];
-        addText(keybinding.getShortcut() + ': ' + keybinding.getDescription(), keybindings);
+        if (keybinding.getMode())
+            addText(keybinding.getShortcut() + ': ' + keybinding.getDescription() + ' (Mode: ' + keybinding.getMode() + ')', keybindings);
+        else
+            addText(keybinding.getShortcut() + ': ' + keybinding.getDescription(), keybindings);
     }
 </script>

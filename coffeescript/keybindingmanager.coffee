@@ -1,37 +1,17 @@
-class Keybinding
-    constructor: (shortcut, action, description) ->
-        @getShortcut = ->
-            shortcut
-
-        @getDescription = ->
-            description
-
-        @getAction = ->
-            action
-
-        KeybindingManager.init()
-        KeybindingManager.register @
-
-    remove: ->
-        KeybindingManager.unregister @
-
-    @getRegistered: ->
-        registered = []
-        for own key, collection of KeybindingManager.keybindings
-            for keybinding in collection
-                registered.push keybinding
-        registered
-
 class KeybindingManager
     @TIMEOUT = 300
 
     @shortcuts = []
     @keybindings = []
+    @globalshortcuts = []
+    @globalkeybindings = []
+    @modevalues = []
     @initiated = false
     @sequence = ''
     @prevSequence = ''
     @storedCount = ''
     @timeoutInterval = null
+    @mode = null
 
     @Keys =
         ZERO: '0'.charCodeAt(0)
@@ -45,6 +25,32 @@ class KeybindingManager
                 document.attachEvent 'onkeypress', -> @onKeyPress
             else if document.addEventListener
                 document.addEventListener 'keypress', @onKeyPress, false
+
+    @setMode: (mode) ->
+        @mode = mode
+        @updateKeybindings()
+
+    @getMode: ->
+        @mode
+
+    @getKeybindings: ->
+        keybindings = Utils.cloneObject @globalkeybindings
+
+        for own key, value of @modevalues
+            Utils.mergeInto @modevalues[key].keybindings, keybindings
+
+        keybindings
+
+    @getCurrentKeybindings: ->
+        @keybindings
+
+    @updateKeybindings: ->
+        @shortcuts = Utils.cloneObject @globalshortcuts
+        @keybindings = Utils.cloneObject @globalkeybindings
+
+        if @mode and @modevalues[@mode]?
+            Utils.mergeInto @modevalues[@mode].keybindings, @keybindings
+            Utils.mergeInto @modevalues[@mode].shortcuts, @shortcuts
 
     @onKeyPress: (ev) =>
         @addToSequence String.fromCharCode(ev.charCode)
@@ -117,12 +123,23 @@ class KeybindingManager
             array = array[char]
 
     @register: (keybinding) ->
-        if !@keybindings[keybinding.getShortcut()]?
-            @keybindings[keybinding.getShortcut()] = []
-        @keybindings[keybinding.getShortcut()].push keybinding
+        if keybinding.getMode()
+            if !@modevalues[keybinding.getMode()]?
+                @modevalues[keybinding.getMode()] =
+                    keybindings: []
+                    shortcuts: []
+            keybindings = @modevalues[keybinding.getMode()].keybindings
+            shortcuts = @modevalues[keybinding.getMode()].shortcuts
+        else
+            keybindings = @globalkeybindings
+            shortcuts = @globalshortcuts
+
+        if !keybindings[keybinding.getShortcut()]?
+            keybindings[keybinding.getShortcut()] = []
+        keybindings[keybinding.getShortcut()].push keybinding
 
         # Register shortcut
-        array = @shortcuts
+        array = shortcuts
         shortcut = keybinding.getShortcut()
         for i in [0...shortcut.length]
             char = shortcut.charAt(i)
@@ -130,15 +147,24 @@ class KeybindingManager
                 array[char] = []
             array = array[char]
 
+        @updateKeybindings()
+
     @unregister: (keybinding) ->
+        if keybinding.getMode()
+            keybindings = @modevalues[keybinding.getMode()].keybindings
+            shortcuts = @modevalues[keybinding.getMode()].shortcuts
+        else
+            keybindings = @globalkeybindings
+            shortcuts = @globalshortcuts
+
         shortcut = keybinding.getShortcut()
-        index = @keybindings[shortcut].indexOf keybinding
-        @keybindings[shortcut].splice index, 1
+        index = keybindings[shortcut].indexOf keybinding
+        keybindings[shortcut].splice index, 1
 
         # Remove from shortcuts
         sequence = shortcut
-        while !@sequenceHasChildren(sequence) and sequence.length > 0 and (!@keybindings[sequence]? or @keybindings[sequence].length == 0)
+        while !@sequenceHasChildren(sequence) and sequence.length > 0 and (!keybindings[sequence]? or keybindings[sequence].length == 0)
             @removeLastInSequence sequence
             sequence = sequence.slice 0, -1
 
-window.Keybinding = Keybinding
+        @updateKeybindings()

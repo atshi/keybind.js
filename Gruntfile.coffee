@@ -4,8 +4,15 @@ module.exports = (grunt) ->
 
         coffee:
             compile:
+                options:
+                    bare: false
+                    join: true
                 files:
-                    'keybind.js': 'coffeescript/keybind.coffee'
+                    'keybind.js': [
+                        'coffeescript/utils.coffee'
+                        'coffeescript/keybindingmanager.coffee'
+                        'coffeescript/keybinding.coffee'
+                    ]
 
         uglify:
             build:
