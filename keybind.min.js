@@ -1,6 +1,7 @@
 /**
 * Keybind.js
 *
+* Version: 0.1
 * Author: Atshi.com
 * Description: Library for creating keybindings within any web application.
 *

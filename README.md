@@ -1,7 +1,7 @@
 Keybind.js
 ==============
 
-The goal of this project is to provide a library for creating keybindings with any webapp.
+A lightweight library for creating keybindings in webapps.
 
 ### Compile with: ###
     grunt build
