@@ -14,17 +14,43 @@ class KeybindingManager
     @mode = null
 
     @Keys =
+        TAB: 9
+        SHIFT: 16
+        CTRL: 17
+        ALT: 18
+        CAPS_LOCK: 20
+        ESCAPE: 27
+        CMD_LEFT: 91
+        CMD_RIGHT: 93
         ZERO: '0'.charCodeAt(0)
         NINE: '9'.charCodeAt(0)
+
+    @modifiers =
+        'TAB': @Keys.TAB
+        'SHIFT': @Keys.SHIFT
+        'S': @Keys.SHIFT
+        'CTRL': @Keys.CTRL
+        'C': @Keys.CTRL
+        'ALT': @Keys.ALT
+        'CAPS_LOCK': @Keys.CAPS_LOCK
+        'CAPSLOCK': @Keys.CAPS_LOCK
+        'ESCAPE': @Keys.ESCAPE
+        'ESC': @Keys.ESCAPE
+        'CMD_LEFT': @Keys.CMD_LEFT
+        'CMDLEFT': @Keys.CMD_LEFT
+        'CMDL': @Keys.CMD_LEFT
+        'CMD_RIGHT': @Keys.CMD_RIGHT
+        'CMDRIGHT': @Keys.CMD_RIGHT
+        'CMDR': @Keys.CMD_RIGHT
 
     @init: ->
         if !@initiated
             @initiated = true
 
             if document.attachEvent # Internet Explorer
-                document.attachEvent 'onkeypress', -> @onKeyPress
+                document.attachEvent 'onkeydown', -> @onKeyDown
             else if document.addEventListener
-                document.addEventListener 'keypress', @onKeyPress, false
+                document.addEventListener 'keydown', @onKeyDown, false
 
     @setMode: (mode) ->
         @mode = mode
@@ -52,8 +78,8 @@ class KeybindingManager
             Utils.mergeInto @modevalues[@mode].keybindings, @keybindings
             Utils.mergeInto @modevalues[@mode].shortcuts, @shortcuts
 
-    @onKeyPress: (ev) =>
-        @addToSequence String.fromCharCode(ev.charCode)
+    @onKeyDown: (ev) =>
+        @addToSequence String.fromCharCode(ev.keyCode)
 
     @addToSequence: (char) ->
         if @timeoutInterval?
@@ -96,7 +122,7 @@ class KeybindingManager
         count = Math.max(1, parseInt(@storedCount))
         if !count then count = 1
         for keybinding in @keybindings[sequence]
-            keybinding.getAction().call(window, count, sequence, keybinding.getDescription())
+            keybinding.getAction().call(window, count, keybinding.getShortcut(), keybinding.getDescription())
 
     @sequenceActionExists: (sequence) ->
         @keybindings[sequence]? and @keybindings[sequence].length > 0
@@ -134,13 +160,13 @@ class KeybindingManager
             keybindings = @globalkeybindings
             shortcuts = @globalshortcuts
 
-        if !keybindings[keybinding.getShortcut()]?
-            keybindings[keybinding.getShortcut()] = []
-        keybindings[keybinding.getShortcut()].push keybinding
+        if !keybindings[keybinding.getInternalShortcut()]?
+            keybindings[keybinding.getInternalShortcut()] = []
+        keybindings[keybinding.getInternalShortcut()].push keybinding
 
         # Register shortcut
         array = shortcuts
-        shortcut = keybinding.getShortcut()
+        shortcut = keybinding.getInternalShortcut()
         for i in [0...shortcut.length]
             char = shortcut.charAt(i)
             if !array[char]?
@@ -157,7 +183,7 @@ class KeybindingManager
             keybindings = @globalkeybindings
             shortcuts = @globalshortcuts
 
-        shortcut = keybinding.getShortcut()
+        shortcut = keybinding.getInternalShortcut()
         index = keybindings[shortcut].indexOf keybinding
         keybindings[shortcut].splice index, 1
 

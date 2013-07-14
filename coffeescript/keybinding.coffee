@@ -1,7 +1,14 @@
 class Keybinding
     constructor: (shortcut, action, description, mode) ->
+        internalShortcut = shortcut.toUpperCase()
+        for own key, value of KeybindingManager.modifiers
+            internalShortcut = internalShortcut.replace '<'+key+'>', String.fromCharCode(value)
+
         @getShortcut = ->
             shortcut
+
+        @getInternalShortcut = ->
+            internalShortcut
 
         @getDescription = ->
             description

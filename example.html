@@ -17,9 +17,24 @@
     var keybindings = document.getElementById('keybindings');
     var output = document.getElementById('output');
 
+    function escapeHtml(string) {
+        var entityMap = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': '&quot;',
+            "'": '&#39;',
+            "/": '&#x2F;'
+        };
+
+        return String(string).replace(/[&<>"'\/]/g, function (s) {
+            return entityMap[s];
+        });
+    }
+
     function addText(text, parent) {
         element = document.createElement('p');
-        element.innerHTML = text;
+        element.innerHTML = escapeHtml(text);
         parent.appendChild(element);
     }
 
@@ -50,6 +65,15 @@
     var k3 = new Keybinding('ad', action, 'Add dog');
     var k4 = new Keybinding('ad', action, 'Add dog 2');
     var k5 = new Keybinding('ad', action, 'Add dog 3');
+
+    new Keybinding('<ctrl>s', action, 'Save');
+    new Keybinding('<shift>s', action, 'Save');
+    new Keybinding('<tab>s', action, 'Save');
+    new Keybinding('<capslock>s', action, 'Save');
+    new Keybinding('<alt>s', action, 'Save');
+    new Keybinding('<esc>s', action, 'Save');
+    new Keybinding('<cmdleft>s', action, 'Save');
+    new Keybinding('<cmdright>s', action, 'Save');
 
     new Keybinding('m', toggleMode, 'Toggle mode (None, Mode 1, Mode 2)')
 
