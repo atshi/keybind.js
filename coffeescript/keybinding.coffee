@@ -1,14 +1,12 @@
 class Keybinding
     constructor: (shortcut, action, description, mode) ->
-        internalShortcut = shortcut.toUpperCase()
-        for own key, value of KeybindingManager.modifiers
-            internalShortcut = internalShortcut.replace '<'+key+'>', String.fromCharCode(value)
+        sequence = shortcut.toUpperCase().match /(?:<.+>|.)\+.|<.+>|./g
+
+        @getSequence = ->
+            sequence
 
         @getShortcut = ->
             shortcut
-
-        @getInternalShortcut = ->
-            internalShortcut
 
         @getDescription = ->
             description

@@ -1,18 +1,15 @@
 class KeybindingManager
     @TIMEOUT = 300
 
-    @shortcuts = []
     @keybindings = []
-    @globalshortcuts = []
     @globalkeybindings = []
     @modevalues = []
     @initiated = false
-    @sequence = ''
-    @prevSequence = ''
     @storedCount = ''
     @timeoutInterval = null
     @mode = null
     @keysDown = []
+    @currentMatches = null
 
     @Keys =
         TAB: 9
@@ -48,6 +45,11 @@ class KeybindingManager
         if !@initiated
             @initiated = true
 
+            # Setup reversed modifiers
+            @reversedModifiers = []
+            for own key, value of @modifiers
+                Utils.safePush @reversedModifiers, value, '<'+key+'>'
+
             if document.attachEvent # Internet Explorer
                 document.attachEvent 'onkeyup', -> @onKeyUp
                 document.attachEvent 'onkeydown', -> @onKeyDown
@@ -66,7 +68,7 @@ class KeybindingManager
         keybindings = Utils.cloneObject @globalkeybindings
 
         for own key, value of @modevalues
-            Utils.mergeInto @modevalues[key].keybindings, keybindings
+            Utils.mergeInto @modevalues[key], keybindings
 
         keybindings
 
@@ -74,130 +76,108 @@ class KeybindingManager
         @keybindings
 
     @updateKeybindings: ->
-        @shortcuts = Utils.cloneObject @globalshortcuts
         @keybindings = Utils.cloneObject @globalkeybindings
 
         if @mode and @modevalues[@mode]?
-            Utils.mergeInto @modevalues[@mode].keybindings, @keybindings
-            Utils.mergeInto @modevalues[@mode].shortcuts, @shortcuts
+            Utils.mergeInto @modevalues[@mode], @keybindings
 
     @onKeyUp: (ev) =>
         delete @keysDown[ev.keyCode]
 
     @onKeyDown: (ev) =>
         @keysDown[ev.keyCode] = true
-        @addToSequence String.fromCharCode(ev.keyCode)
+        @addToSequence ev.keyCode
 
-    @addToSequence: (char) ->
-        if @timeoutInterval?
-            clearTimeout @timeoutInterval
-            @timeoutInterval = null
-
-        charcode = char.charCodeAt(0)
-
-        if !@sequence and charcode >= @Keys.ZERO and charcode <= @Keys.NINE
-            @storedCount += char
+    @getChars: (keycode) ->
+        if @reversedModifiers[keycode]?
+            @reversedModifiers[keycode]
         else
-            @prevSequence = @sequence
-            @sequence += char
-            if @sequenceHasChildren @sequence
-                @timeoutInterval = setTimeout @findSequenceAndExecute.bind(this), @TIMEOUT
-            else
-                @findSequenceAndExecute()
+            [String.fromCharCode keycode]
 
-    @findSequenceAndExecute: ->
-        if @sequenceActionExists @sequence
-            @executeSequence @sequence
-            charFromPrev = null
-        else if @sequenceActionExists @prevSequence
-            @executeSequence @prevSequence
-            charFromPrev = @sequence.slice(-1)
-
-        @sequence = ''
-        @prevSequence = ''
-        @storedCount = ''
-
+    @addToSequence: (keycode) ->
         if @timeoutInterval?
             clearTimeout @timeoutInterval
             @timeoutInterval = null
 
-        # Start a new sequence with unused char
-        if charFromPrev?
-            @addToSequence charFromPrev
+        if !@currentMatches? and keycode >= @Keys.ZERO and keycode <= @Keys.NINE
+            @storedCount += String.fromCharCode(keycode)
+        else
+            if !@currentMatches?
+                @currentMatches = @keybindings
+                @matchIndex = 0
 
-    @executeSequence: (sequence) ->
+            chars = @getChars keycode
+            newMatches = []
+            exactMatches = []
+            foundNewMatches = false
+            @matchIndex++
+
+            for char in chars
+                for own key, keybinding of @currentMatches[char]
+                    sequence = keybinding.getSequence()
+                    if sequence.length > @matchIndex
+                        nextChar = sequence[@matchIndex]
+                        Utils.safePush newMatches, nextChar, keybinding
+                        foundNewMatches = true
+                    else
+                        exactMatches.push keybinding
+
+            if !foundNewMatches
+                @currentMatches = null
+                if exactMatches.length > 0
+                    @executeMatches exactMatches
+                    @currentExactMatches = null
+                    @currentMatches = null
+                else if @currentExactMatches? and @currentExactMatches.length > 0
+                    @executeMatches @currentExactMatches
+                    @currentExactMatches = null
+                    @currentMatches = null
+                    @addToSequence keycode
+                else
+                    @currentExactMatches = null
+            else
+                @currentMatches = newMatches
+
+                @currentExactMatches = exactMatches
+                @timeoutInterval = setTimeout =>
+                    @executeMatches @currentExactMatches
+                    @currentExactMatches = null
+                    @currentMatches = null
+                , @TIMEOUT
+
+    @executeMatches: (matches) ->
         count = Math.max(1, parseInt(@storedCount))
+        @storedCount = ''
         if !count then count = 1
-        for keybinding in @keybindings[sequence]
-            keybinding.getAction().call(window, count, keybinding.getShortcut(), keybinding.getDescription())
+        if matches?
+            for keybinding in matches
+                keybinding.getAction().call(window, count, keybinding.getShortcut(), keybinding.getDescription())
 
-    @sequenceActionExists: (sequence) ->
-        @keybindings[sequence]? and @keybindings[sequence].length > 0
-
-    @sequenceHasChildren: (sequence) ->
-        array = @shortcuts
-        for i in [0...sequence.length]
-            char = sequence.charAt(i)
-            if !array[char]?
-                return false
-            array = array[char]
-        for own key of array
-            return true
-        return false
-
-    @removeLastInSequence: (sequence) ->
-        array = @shortcuts
-        for i in [0...sequence.length]
-            char = sequence.charAt(i)
-            if i == sequence.length-1
-                delete array[char]
-            if !array[char]?
-                return
-            array = array[char]
+        if @timeoutInterval?
+            clearTimeout @timeoutInterval
+            @timeoutInterval = null
 
     @register: (keybinding) ->
         if keybinding.getMode()
-            if !@modevalues[keybinding.getMode()]?
-                @modevalues[keybinding.getMode()] =
-                    keybindings: []
-                    shortcuts: []
-            keybindings = @modevalues[keybinding.getMode()].keybindings
-            shortcuts = @modevalues[keybinding.getMode()].shortcuts
+            keybindings = Utils.getAndCreate @modevalues, keybinding.getMode()
         else
             keybindings = @globalkeybindings
-            shortcuts = @globalshortcuts
+        sequence = keybinding.getSequence()
 
-        if !keybindings[keybinding.getInternalShortcut()]?
-            keybindings[keybinding.getInternalShortcut()] = []
-        keybindings[keybinding.getInternalShortcut()].push keybinding
-
-        # Register shortcut
-        array = shortcuts
-        shortcut = keybinding.getInternalShortcut()
-        for i in [0...shortcut.length]
-            char = shortcut.charAt(i)
-            if !array[char]?
-                array[char] = []
-            array = array[char]
+        if sequence.length > 0
+            Utils.safePush keybindings, sequence[0], keybinding
 
         @updateKeybindings()
 
     @unregister: (keybinding) ->
         if keybinding.getMode()
-            keybindings = @modevalues[keybinding.getMode()].keybindings
-            shortcuts = @modevalues[keybinding.getMode()].shortcuts
+            keybindings = @modevalues[keybinding.getMode()]
         else
             keybindings = @globalkeybindings
-            shortcuts = @globalshortcuts
 
-        shortcut = keybinding.getInternalShortcut()
-        index = keybindings[shortcut].indexOf keybinding
-        keybindings[shortcut].splice index, 1
-
-        # Remove from shortcuts
-        sequence = shortcut
-        while !@sequenceHasChildren(sequence) and sequence.length > 0 and (!keybindings[sequence]? or keybindings[sequence].length == 0)
-            @removeLastInSequence sequence
-            sequence = sequence.slice 0, -1
+        sequence = keybinding.getSequence()
+        first = sequence[0]
+        index = keybindings[first].indexOf keybinding
+        keybindings[first].splice index, 1
 
         @updateKeybindings()

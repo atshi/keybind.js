@@ -1,5 +1,5 @@
 class Utils
-    @typeIsArray = ( value ) ->
+    @typeIsArray: (value) ->
         value and
             typeof value is 'object' and
             value instanceof Array and
@@ -7,7 +7,7 @@ class Utils
             typeof value.splice is 'function' and
             not ( value.propertyIsEnumerable 'length' )
 
-    @cloneObject = (obj) ->
+    @cloneObject: (obj) ->
         if typeof obj == 'string' or typeof obj == 'number'
             return obj
 
@@ -19,7 +19,7 @@ class Utils
                 newObj[key] = obj[key]
         return newObj
 
-    @mergeInto = (obj, into) ->
+    @mergeInto: (obj, into) ->
         for own key, value of obj
             if into[key]?
                 if @typeIsArray(into[key]) and into[key].length > 0
@@ -28,3 +28,13 @@ class Utils
                     @mergeInto obj[key], into[key]
             else
                 into[key] = @cloneObject obj[key]
+
+    @safePush: (array, key, value) ->
+        if !array[key]?
+            array[key] = []
+        array[key].push value
+
+    @getAndCreate: (array, key) ->
+        if !array[key]?
+            array[key] = []
+        array[key]
