@@ -24,22 +24,23 @@ class KeybindingManager
         NINE: '9'.charCodeAt(0)
 
     @modifiers =
-        '<TAB>': @Keys.TAB
-        '<SHIFT>': @Keys.SHIFT
-        '<S>': @Keys.SHIFT
-        '<CTRL>': @Keys.CTRL
-        '<C>': @Keys.CTRL
-        '<ALT>': @Keys.ALT
-        '<CAPS_LOCK>': @Keys.CAPS_LOCK
-        '<CAPSLOCK>': @Keys.CAPS_LOCK
-        '<ESCAPE>': @Keys.ESCAPE
-        '<ESC>': @Keys.ESCAPE
-        '<CMD_LEFT>': @Keys.CMD_LEFT
-        '<CMDLEFT>': @Keys.CMD_LEFT
-        '<CMDL>': @Keys.CMD_LEFT
-        '<CMD_RIGHT>': @Keys.CMD_RIGHT
-        '<CMDRIGHT>': @Keys.CMD_RIGHT
-        '<CMDR>': @Keys.CMD_RIGHT
+        '<TAB>': [@Keys.TAB]
+        '<SHIFT>': [@Keys.SHIFT]
+        '<S>': [@Keys.SHIFT]
+        '<CTRL>': [@Keys.CTRL]
+        '<C>': [@Keys.CTRL]
+        '<ALT>': [@Keys.ALT]
+        '<CAPS_LOCK>': [@Keys.CAPS_LOCK]
+        '<CAPSLOCK>': [@Keys.CAPS_LOCK]
+        '<ESCAPE>': [@Keys.ESCAPE]
+        '<ESC>': [@Keys.ESCAPE]
+        '<CMD_LEFT>': [@Keys.CMD_LEFT]
+        '<CMDLEFT>': [@Keys.CMD_LEFT]
+        '<CMDL>': [@Keys.CMD_LEFT]
+        '<CMD_RIGHT>': [@Keys.CMD_RIGHT]
+        '<CMDRIGHT>': [@Keys.CMD_RIGHT]
+        '<CMDR>': [@Keys.CMD_RIGHT]
+        '<CMD>': [@Keys.CMD_LEFT, @Keys.CMD_RIGHT]
 
     @init: ->
         if !@initiated
@@ -48,7 +49,8 @@ class KeybindingManager
             # Setup reversed modifiers
             @reversedModifiers = []
             for own key, value of @modifiers
-                Utils.safePush @reversedModifiers, value, key
+                for v in value
+                    Utils.safePush @reversedModifiers, v, key
 
             if document.attachEvent # Internet Explorer
                 document.attachEvent 'onkeyup', -> @onKeyUp
@@ -99,7 +101,7 @@ class KeybindingManager
 
     @getKeycodes: (char) ->
         if @modifiers[char]?
-            [@modifiers[char]]
+            @modifiers[char]
         else
             [char.charCodeAt 0]
 
