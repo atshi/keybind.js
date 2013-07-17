@@ -12,6 +12,7 @@ class KeybindingManager
     @storedCount = ''
     @timeoutInterval = null
     @mode = null
+    @keysDown = []
 
     @Keys =
         TAB: 9
@@ -48,8 +49,10 @@ class KeybindingManager
             @initiated = true
 
             if document.attachEvent # Internet Explorer
+                document.attachEvent 'onkeyup', -> @onKeyUp
                 document.attachEvent 'onkeydown', -> @onKeyDown
             else if document.addEventListener
+                document.addEventListener 'keyup', @onKeyUp, false
                 document.addEventListener 'keydown', @onKeyDown, false
 
     @setMode: (mode) ->
@@ -78,7 +81,11 @@ class KeybindingManager
             Utils.mergeInto @modevalues[@mode].keybindings, @keybindings
             Utils.mergeInto @modevalues[@mode].shortcuts, @shortcuts
 
+    @onKeyUp: (ev) =>
+        delete @keysDown[ev.keyCode]
+
     @onKeyDown: (ev) =>
+        @keysDown[ev.keyCode] = true
         @addToSequence String.fromCharCode(ev.keyCode)
 
     @addToSequence: (char) ->
