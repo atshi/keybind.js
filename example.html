@@ -64,21 +64,15 @@
         }
     }
 
+    new Keybinding('bs+da', action, 'B, Hold S then D, A');
+    new Keybinding('<shift>+d', action, 'Hold shift then D');
+
     var k1 = new Keybinding('a', action, 'Add nothing');
     var k2 = new Keybinding('ac', action, 'Add cat', 'Mode 1');
     var k2 = new Keybinding('ac', action, 'Add category', 'Mode 2');
     var k3 = new Keybinding('ad', action, 'Add dog');
     var k4 = new Keybinding('ad', action, 'Add dog 2');
     var k5 = new Keybinding('ad', action, 'Add dog 3');
-
-    new Keybinding('<ctrl>s', action, 'Save');
-    new Keybinding('<shift>s', action, 'Save');
-    new Keybinding('<tab>s', action, 'Save');
-    new Keybinding('<capslock>s', action, 'Save');
-    new Keybinding('<alt>s', action, 'Save');
-    new Keybinding('<esc>s', action, 'Save');
-    new Keybinding('<cmdleft>s', action, 'Save');
-    new Keybinding('<cmdright>s', action, 'Save');
 
     new Keybinding('m', toggleMode, 'Toggle mode (None, Mode 1, Mode 2)')
 

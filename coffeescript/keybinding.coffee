@@ -1,6 +1,16 @@
 class Keybinding
     constructor: (shortcut, action, description, mode) ->
         sequence = shortcut.toUpperCase().match /(?:<.+>|.)\+.|<.+>|./g
+        rules = []
+
+        for part, i in sequence
+            split = part.split '+'
+            if split.length > 1
+                rules[i] = split[0]
+                sequence[i] = split[1]
+
+        @getRule = (index) ->
+            rules[index]
 
         @getSequence = ->
             sequence

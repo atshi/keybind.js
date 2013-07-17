@@ -24,22 +24,22 @@ class KeybindingManager
         NINE: '9'.charCodeAt(0)
 
     @modifiers =
-        'TAB': @Keys.TAB
-        'SHIFT': @Keys.SHIFT
-        'S': @Keys.SHIFT
-        'CTRL': @Keys.CTRL
-        'C': @Keys.CTRL
-        'ALT': @Keys.ALT
-        'CAPS_LOCK': @Keys.CAPS_LOCK
-        'CAPSLOCK': @Keys.CAPS_LOCK
-        'ESCAPE': @Keys.ESCAPE
-        'ESC': @Keys.ESCAPE
-        'CMD_LEFT': @Keys.CMD_LEFT
-        'CMDLEFT': @Keys.CMD_LEFT
-        'CMDL': @Keys.CMD_LEFT
-        'CMD_RIGHT': @Keys.CMD_RIGHT
-        'CMDRIGHT': @Keys.CMD_RIGHT
-        'CMDR': @Keys.CMD_RIGHT
+        '<TAB>': @Keys.TAB
+        '<SHIFT>': @Keys.SHIFT
+        '<S>': @Keys.SHIFT
+        '<CTRL>': @Keys.CTRL
+        '<C>': @Keys.CTRL
+        '<ALT>': @Keys.ALT
+        '<CAPS_LOCK>': @Keys.CAPS_LOCK
+        '<CAPSLOCK>': @Keys.CAPS_LOCK
+        '<ESCAPE>': @Keys.ESCAPE
+        '<ESC>': @Keys.ESCAPE
+        '<CMD_LEFT>': @Keys.CMD_LEFT
+        '<CMDLEFT>': @Keys.CMD_LEFT
+        '<CMDL>': @Keys.CMD_LEFT
+        '<CMD_RIGHT>': @Keys.CMD_RIGHT
+        '<CMDRIGHT>': @Keys.CMD_RIGHT
+        '<CMDR>': @Keys.CMD_RIGHT
 
     @init: ->
         if !@initiated
@@ -48,7 +48,7 @@ class KeybindingManager
             # Setup reversed modifiers
             @reversedModifiers = []
             for own key, value of @modifiers
-                Utils.safePush @reversedModifiers, value, '<'+key+'>'
+                Utils.safePush @reversedModifiers, value, key
 
             if document.attachEvent # Internet Explorer
                 document.attachEvent 'onkeyup', -> @onKeyUp
@@ -88,6 +88,21 @@ class KeybindingManager
         @keysDown[ev.keyCode] = true
         @addToSequence ev.keyCode
 
+    @tryRule: (rule) ->
+        if rule
+            keycodes = @getKeycodes rule
+            for key in keycodes
+                if @keysDown[key]? and @keysDown[key]
+                    return true
+            return false
+        true
+
+    @getKeycodes: (char) ->
+        if @modifiers[char]?
+            [@modifiers[char]]
+        else
+            [char.charCodeAt 0]
+
     @getChars: (keycode) ->
         if @reversedModifiers[keycode]?
             @reversedModifiers[keycode]
@@ -116,22 +131,20 @@ class KeybindingManager
                 for own key, keybinding of @currentMatches[char]
                     sequence = keybinding.getSequence()
                     if sequence.length > @matchIndex
-                        nextChar = sequence[@matchIndex]
-                        Utils.safePush newMatches, nextChar, keybinding
-                        foundNewMatches = true
+                        if @tryRule keybinding.getRule(@matchIndex)
+                            nextChar = sequence[@matchIndex]
+                            Utils.safePush newMatches, nextChar, keybinding
+                            foundNewMatches = true
                     else
-                        exactMatches.push keybinding
+                        if @tryRule keybinding.getRule(@matchIndex - 1)
+                            exactMatches.push keybinding
 
             if !foundNewMatches
                 @currentMatches = null
                 if exactMatches.length > 0
                     @executeMatches exactMatches
-                    @currentExactMatches = null
-                    @currentMatches = null
                 else if @currentExactMatches? and @currentExactMatches.length > 0
                     @executeMatches @currentExactMatches
-                    @currentExactMatches = null
-                    @currentMatches = null
                     @addToSequence keycode
                 else
                     @currentExactMatches = null
@@ -139,11 +152,7 @@ class KeybindingManager
                 @currentMatches = newMatches
 
                 @currentExactMatches = exactMatches
-                @timeoutInterval = setTimeout =>
-                    @executeMatches @currentExactMatches
-                    @currentExactMatches = null
-                    @currentMatches = null
-                , @TIMEOUT
+                @timeoutInterval = setTimeout @executeMatches.bind(this, @currentExactMatches), @TIMEOUT
 
     @executeMatches: (matches) ->
         count = Math.max(1, parseInt(@storedCount))
@@ -156,6 +165,9 @@ class KeybindingManager
         if @timeoutInterval?
             clearTimeout @timeoutInterval
             @timeoutInterval = null
+
+        @currentExactMatches = null
+        @currentMatches = null
 
     @register: (keybinding) ->
         if keybinding.getMode()
